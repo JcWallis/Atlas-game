@@ -1,0 +1,999 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Atlas — Endless Run</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --glass: rgba(255,255,255,0.07);
+  --glass-b: rgba(255,100,80,0.18);
+  --blue: #c0392b;
+  --bluem: #e05040;
+  --green: #c0392b;
+  --red: #ff4444;
+  --gold: #ff6b4a;
+  --purple: #8b2020;
+  --dark: #f0d0cc;
+  --mid: #c08880;
+  --light: #3a1010;
+  --shadow: rgba(180,20,20,0.22);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;font-family:'Nunito',sans-serif;background:linear-gradient(155deg,#0e0606 0%,#1a0808 35%,#120404 68%,#0a0202 100%);color:var(--dark);overflow-x:hidden}
+
+/* Ambient */
+.amb{position:fixed;inset:0;pointer-events:none;z-index:0}
+.amb-b{position:absolute;border-radius:50%;animation:ambFloat 10s ease-in-out infinite}
+.ab1{width:560px;height:560px;top:-180px;left:-160px;background:radial-gradient(circle,rgba(200,30,20,.18) 0%,transparent 65%)}
+.ab2{width:400px;height:400px;bottom:-110px;right:-90px;background:radial-gradient(circle,rgba(160,20,10,.14) 0%,transparent 65%);animation-delay:-5s;animation-duration:13s}
+.ab3{width:280px;height:280px;top:45%;left:55%;background:radial-gradient(circle,rgba(220,60,30,.1) 0%,transparent 65%);animation-delay:-8s}
+@keyframes ambFloat{0%,100%{transform:translate(0,0) scale(1)}40%{transform:translate(22px,-28px) scale(1.04)}70%{transform:translate(-14px,16px) scale(.97)}}
+
+/* Screens */
+.screen{display:none;position:relative;z-index:1;min-height:100vh;padding:16px 10px 36px;align-items:center;justify-content:center;flex-direction:column;gap:0}
+.screen.on{display:flex}
+
+/* Panel */
+.panel{background:linear-gradient(148deg,rgba(40,8,8,.72) 0%,rgba(25,4,4,.65) 100%);border:2.5px solid rgba(200,60,40,.22);backdrop-filter:blur(22px);border-radius:26px;box-shadow:0 10px 44px rgba(180,20,10,.28),inset 0 1.5px 0 rgba(255,80,60,.12),inset 0 -1.5px 0 rgba(120,10,10,.3)}
+
+/* ── TITLE ── */
+.t-logo{font-size:clamp(2.2rem,7vw,3rem);font-weight:900;text-shadow:0 3px 0 rgba(0,0,0,.6),0 6px 28px rgba(220,40,20,.35);letter-spacing:-1.5px;text-align:center;margin-bottom:3px}
+.t-logo .g{background:linear-gradient(130deg,#ff6050,#cc2010,#ff4030);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.t-sub{text-align:center;font-size:.82rem;font-weight:700;color:#804040;letter-spacing:1.8px;text-transform:uppercase;margin-bottom:22px}
+.diff-panel{padding:24px 26px;width:min(420px,96vw);margin-bottom:14px}
+.diff-panel h2{font-size:.88rem;font-weight:800;color:#804040;text-align:center;margin-bottom:14px;text-transform:uppercase;letter-spacing:1.5px}
+.diff-list{display:flex;flex-direction:column;gap:9px}
+.dc{display:flex;align-items:center;gap:12px;background:rgba(80,10,10,.45);border:2px solid rgba(180,50,30,.2);border-radius:17px;padding:13px 16px;cursor:pointer;transition:all .18s;box-shadow:0 3px 12px rgba(150,10,10,.2)}
+.dc:hover{transform:translateY(-2px);background:rgba(100,15,15,.55);box-shadow:0 6px 20px rgba(180,20,10,.28)}
+.dc.sel{border-color:rgba(220,60,40,.6);background:rgba(180,30,20,.18);box-shadow:0 4px 16px rgba(200,40,20,.25)}
+.dc-icon{font-size:1.8rem;flex-shrink:0}
+.dc-info{flex:1}
+.dc-name{font-size:.97rem;font-weight:900;margin-bottom:2px;color:#f0c0b0}
+.dc-desc{font-size:.73rem;color:#806060;font-weight:600;line-height:1.4}
+.dc-tag{font-size:.66rem;font-weight:800;padding:3px 9px;border-radius:50px;text-transform:uppercase;letter-spacing:.4px;flex-shrink:0}
+.tag-g{background:rgba(200,60,40,.15);color:#e07060;border:1.5px solid rgba(200,60,40,.35)}
+.tag-b{background:rgba(180,40,30,.15);color:#d06050;border:1.5px solid rgba(180,40,30,.35)}
+.tag-r{background:rgba(220,30,20,.18);color:#ff6050;border:1.5px solid rgba(220,30,20,.4)}
+.tag-p{background:rgba(160,20,20,.18);color:#cc4040;border:1.5px solid rgba(160,20,20,.35)}
+
+/* ── GAME SCREEN ── */
+#sg{padding:12px 8px 28px;gap:6px}
+
+/* Timer strip */
+.timer-strip{width:min(500px,98vw);position:relative}
+.t-top{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:5px}
+.t-secs{font-size:2.4rem;font-weight:900;line-height:1;text-shadow:0 2px 12px rgba(220,40,20,.4);color:#f0c0b0}
+.t-secs.warn{color:#ff4444;animation:secsPulse .7s ease-in-out infinite}
+@keyframes secsPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+.t-label{font-size:.7rem;font-weight:700;color:#804040;text-transform:uppercase;letter-spacing:1.2px}
+.t-floor-info{font-size:.78rem;font-weight:800;color:#804040;text-align:right}
+.t-bar-wrap{height:10px;background:rgba(80,10,10,.5);border:2px solid rgba(180,40,20,.25);border-radius:50px;overflow:hidden;box-shadow:inset 0 2px 4px rgba(0,0,0,.3)}
+.t-bar{height:100%;border-radius:50px;background:linear-gradient(90deg,#cc2010,#ff5030);box-shadow:0 0 10px rgba(220,40,20,.55);transition:width .95s linear,background .4s}
+.t-bar.warn{background:linear-gradient(90deg,#ff8020,#ff2020);box-shadow:0 0 14px rgba(255,40,20,.6)}
+
+/* Score goal bar */
+.score-strip{width:min(500px,98vw)}
+.sg-top{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:5px}
+.sg-cur{font-size:1.5rem;font-weight:900;color:#f0c0b0;transition:color .3s}
+.sg-cur.hit{color:#ff7050;text-shadow:0 0 14px rgba(255,80,40,.5)}
+.sg-target{font-size:.82rem;font-weight:800;color:#804040}
+.sg-bar-wrap{height:14px;background:rgba(80,10,10,.5);border:2px solid rgba(180,40,20,.25);border-radius:50px;overflow:hidden;box-shadow:inset 0 2px 5px rgba(0,0,0,.3)}
+.sg-bar{height:100%;border-radius:50px;background:linear-gradient(90deg,#8b1010,#cc2010);box-shadow:0 0 10px rgba(200,30,10,.4);transition:width .4s cubic-bezier(.4,0,.2,1),background .4s;max-width:100%}
+.sg-bar.hit{background:linear-gradient(90deg,#cc2010,#ff5030);box-shadow:0 0 18px rgba(220,50,20,.6);animation:hitGlow .5s ease-out}
+@keyframes hitGlow{0%{filter:brightness(1.6) saturate(1.4)}100%{filter:none}}
+
+/* HUD row */
+.hud{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;width:min(500px,98vw)}
+.hud-p{background:rgba(50,8,8,.6);border:2px solid rgba(180,40,20,.2);backdrop-filter:blur(14px);border-radius:50px;padding:6px 14px;box-shadow:0 3px 12px rgba(150,10,10,.2),inset 0 1px 0 rgba(255,60,40,.08);display:flex;align-items:center;gap:7px}
+.hp-label{font-size:.64rem;font-weight:700;color:#804040;text-transform:uppercase;letter-spacing:1px}
+.hp-val{font-size:1rem;font-weight:900;color:#f0c0b0}
+.phase-badge{display:inline-flex;align-items:center;gap:5px;font-size:.76rem;font-weight:800;padding:5px 12px;border-radius:50px;letter-spacing:.3px}
+.pb-easy{background:rgba(200,50,30,.15);color:#e07858;border:2px solid rgba(200,50,30,.3)}
+.pb-normal{background:rgba(180,30,20,.15);color:#d05540;border:2px solid rgba(180,30,20,.3)}
+.pb-hard{background:rgba(220,20,20,.18);color:#ff5040;border:2px solid rgba(220,20,20,.35)}
+.pb-endless{background:rgba(140,10,10,.2);color:#ff3030;border:2px solid rgba(180,20,20,.35);animation:endlessPulse 2s ease-in-out infinite}
+@keyframes endlessPulse{0%,100%{box-shadow:0 0 0 0 rgba(200,20,20,.3)}50%{box-shadow:0 0 0 6px rgba(200,20,20,0)}}
+
+/* Active powers strip */
+.powers-strip{display:flex;gap:5px;flex-wrap:wrap;justify-content:center;width:min(500px,98vw);min-height:26px}
+.pw-badge{font-size:.7rem;font-weight:800;background:rgba(80,10,10,.55);border:1.5px solid rgba(200,50,30,.25);border-radius:50px;padding:3px 9px;display:flex;align-items:center;gap:4px;box-shadow:0 2px 8px rgba(150,10,10,.2);color:#e0a090;animation:badgePop .3s cubic-bezier(.34,1.56,.64,1)}
+@keyframes badgePop{from{transform:scale(0);opacity:0}to{transform:scale(1);opacity:1}}
+
+/* Game panel & grid */
+.game-panel{padding:16px;width:min(490px,99vw)}
+.grid{display:grid;gap:8px}
+.card{aspect-ratio:1;perspective:700px;cursor:pointer}
+.card-inner{width:100%;height:100%;position:relative;transform-style:preserve-3d;transition:transform .4s cubic-bezier(.4,0,.2,1);border-radius:14px}
+.card.flipped .card-inner,.card.matched .card-inner{transform:rotateY(180deg)}
+.card.clearing .card-inner{animation:clearPop .3s cubic-bezier(.4,0,.6,1) forwards}
+@keyframes clearPop{0%{transform:rotateY(180deg) scale(1)}50%{transform:rotateY(180deg) scale(1.12)}100%{transform:rotateY(180deg) scale(0);opacity:0}}
+.card-face{position:absolute;inset:0;border-radius:14px;backface-visibility:hidden;display:flex;align-items:center;justify-content:center;font-size:clamp(1.2rem,3.8vw,1.75rem);user-select:none}
+.card-back{background:linear-gradient(148deg,#1e0404 0%,#2a0808 52%,#1a0303 100%);border:2px solid rgba(180,40,20,.3);box-shadow:0 3px 10px rgba(150,10,10,.3),inset 0 1px 0 rgba(255,60,40,.08);overflow:hidden}
+.card-back::after{content:'✦';color:rgba(200,50,30,.45);font-size:.9rem}
+.card-back::before{content:'';position:absolute;top:0;left:-70%;width:38%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,80,50,.12),transparent);transition:left .45s}
+.card:not(.flipped):not(.matched):hover .card-back::before{left:130%}
+.card:not(.flipped):not(.matched):hover .card-inner{transform:rotateY(8deg) scale(1.06)}
+.card-front{transform:rotateY(180deg);background:linear-gradient(145deg,#2e0808 0%,#1e0404 100%);border:2px solid rgba(200,50,30,.3);box-shadow:0 3px 10px rgba(150,10,10,.25),inset 0 1px 0 rgba(255,60,40,.06)}
+.card.matched .card-front{background:linear-gradient(145deg,#3a0c0c,#250606);border-color:rgba(220,50,30,.6);box-shadow:0 0 20px rgba(200,30,10,.4);animation:matchPop .36s cubic-bezier(.34,1.56,.64,1)}
+@keyframes matchPop{0%{transform:rotateY(180deg) scale(.88)}55%{transform:rotateY(180deg) scale(1.12)}100%{transform:rotateY(180deg) scale(1)}}
+.card.hint .card-back{animation:hintGlow .6s ease-in-out infinite alternate}
+@keyframes hintGlow{from{box-shadow:0 0 0 0 rgba(220,60,30,.3)}to{box-shadow:0 0 0 8px rgba(220,60,30,0),0 0 16px 4px rgba(220,60,30,.55)}}
+
+/* Game action buttons */
+.game-btns{display:flex;gap:8px;margin-top:12px;justify-content:center;flex-wrap:wrap}
+
+/* Board clear flash */
+.bc-flash{position:fixed;inset:0;z-index:80;pointer-events:none;background:rgba(200,30,10,.0);animation:bcFlash .5s ease-out}
+@keyframes bcFlash{0%{background:rgba(200,30,10,.3)}100%{background:rgba(200,30,10,0)}}
+
+/* ── FLOOR MODAL (inside game screen) ── */
+.modal-bg{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;background:rgba(10,2,2,.55);backdrop-filter:blur(10px)}
+.modal-box{background:linear-gradient(152deg,rgba(40,8,8,.92),rgba(22,4,4,.88));border:2.5px solid rgba(200,50,30,.22);border-radius:28px;padding:32px 28px;text-align:center;box-shadow:0 20px 60px rgba(180,20,10,.35),inset 0 1.5px 0 rgba(255,60,40,.1);animation:modalPop .42s cubic-bezier(.34,1.56,.64,1);width:min(340px,92vw)}
+@keyframes modalPop{from{transform:scale(.55);opacity:0}to{transform:scale(1);opacity:1}}
+.modal-icon{font-size:3.6rem;margin-bottom:8px;display:block}
+.modal-title{font-size:1.9rem;font-weight:900;margin-bottom:5px;color:#f0c0b0}
+.modal-sub{font-size:.88rem;font-weight:600;color:#806060;margin-bottom:16px;line-height:1.5}
+.modal-stats{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:18px}
+.ms{background:rgba(80,10,10,.5);border:2px solid rgba(180,40,20,.22);border-radius:13px;padding:9px 14px;text-align:center;box-shadow:0 3px 10px rgba(150,10,10,.2)}
+.ms-v{font-size:1.3rem;font-weight:900;color:#f0c0b0}
+.ms-l{font-size:.65rem;font-weight:700;color:#806060;text-transform:uppercase;letter-spacing:.7px}
+
+/* ── DRAFT SCREEN ── */
+#sd{gap:0}
+.draft-top{text-align:center;margin-bottom:18px}
+.draft-top h1{font-size:1.75rem;font-weight:900;margin-bottom:4px;color:#f0c0b0}
+.draft-top p{font-size:.86rem;color:#806060;font-weight:600}
+.floor-badge{display:inline-block;margin-bottom:8px;padding:4px 14px;border-radius:50px;font-size:.74rem;font-weight:800;background:linear-gradient(135deg,#8b1010,#cc2010);color:#ffd0c0;box-shadow:0 3px 10px rgba(180,20,10,.35)}
+.pup-grid{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;width:min(520px,96vw)}
+.pup{flex:1 1 140px;max-width:162px;background:linear-gradient(148deg,rgba(50,8,8,.75),rgba(30,4,4,.65));border:2.5px solid rgba(180,40,20,.22);border-radius:21px;padding:18px 14px 16px;text-align:center;cursor:pointer;transition:all .2s;box-shadow:0 6px 24px rgba(150,10,10,.22),inset 0 1.5px 0 rgba(255,60,40,.07);position:relative;overflow:hidden}
+.pup::before{content:'';position:absolute;inset:0;border-radius:21px;background:linear-gradient(150deg,rgba(255,60,40,0) 40%,rgba(255,60,40,.05) 100%);pointer-events:none}
+.pup:hover{transform:translateY(-5px) scale(1.03);box-shadow:0 14px 36px rgba(180,20,10,.35);border-color:rgba(220,60,40,.4)}
+.pup:active{transform:scale(.97)}
+.pup-icon{font-size:2.2rem;margin-bottom:7px;filter:drop-shadow(0 2px 8px rgba(200,30,10,.3))}
+.pup-name{font-size:.9rem;font-weight:900;margin-bottom:4px;color:#f0c0b0}
+.pup-desc{font-size:.7rem;font-weight:600;color:#806060;line-height:1.4}
+.pup-rar{display:inline-block;margin-top:7px;font-size:.62rem;font-weight:800;padding:2px 8px;border-radius:50px;text-transform:uppercase;letter-spacing:.4px}
+.rar-c{background:rgba(180,40,20,.15);color:#c06050;border:1.5px solid rgba(180,40,20,.3)}
+.rar-r{background:rgba(150,20,20,.18);color:#d04040;border:1.5px solid rgba(150,20,20,.35)}
+.rar-e{background:rgba(200,60,20,.2);color:#e07040;border:1.5px solid rgba(200,60,20,.4)}
+
+/* Phase-up banner */
+.phaseup{position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;background:rgba(5,0,0,.7);backdrop-filter:blur(14px)}
+.phaseup-box{text-align:center;animation:phaseSlide .5s cubic-bezier(.34,1.56,.64,1)}
+@keyframes phaseSlide{from{transform:scale(.4) translateY(40px);opacity:0}to{transform:scale(1) translateY(0);opacity:1}}
+.phaseup-icon{font-size:5rem;display:block;margin-bottom:10px;filter:drop-shadow(0 4px 20px rgba(220,40,20,.5))}
+.phaseup-title{font-size:2.6rem;font-weight:900;color:#ffd0b0;text-shadow:0 3px 20px rgba(200,30,10,.5);margin-bottom:8px}
+.phaseup-sub{font-size:1rem;font-weight:700;color:rgba(220,130,100,.8)}
+
+/* ── END SCREEN ── */
+#se{gap:0}
+.end-panel{padding:32px 28px;text-align:center;width:min(380px,95vw)}
+.end-icon{font-size:4rem;display:block;margin-bottom:8px;animation:endBounce .55s cubic-bezier(.34,1.56,.64,1)}
+@keyframes endBounce{from{transform:scale(0) rotate(-20deg)}to{transform:scale(1) rotate(0)}}
+.end-title{font-size:2rem;font-weight:900;margin-bottom:6px;color:#f0c0b0}
+.end-sub{font-size:.88rem;color:#806060;font-weight:600;margin-bottom:16px}
+.end-stats{display:flex;gap:9px;justify-content:center;flex-wrap:wrap;margin-bottom:16px}
+.pows-end{margin-bottom:18px}
+.pows-end h3{font-size:.76rem;font-weight:800;color:#806060;text-transform:uppercase;letter-spacing:1px;margin-bottom:7px}
+.pows-list{display:flex;gap:5px;flex-wrap:wrap;justify-content:center}
+.run-history{width:100%;max-height:120px;overflow-y:auto;margin-bottom:14px;background:rgba(60,6,6,.5);border:1.5px solid rgba(180,40,20,.2);border-radius:12px;padding:8px}
+.rh-row{display:flex;justify-content:space-between;font-size:.72rem;font-weight:700;padding:3px 6px;border-radius:8px;color:#c09080}
+.rh-row:nth-child(odd){background:rgba(100,10,10,.3)}
+.rh-floor{color:#906050}
+.rh-score{color:#d0a090}
+.rh-result.ok{color:#e07050}
+.rh-result.fail{color:#ff3030}
+
+/* ── BUTTONS ── */
+.btn{font-family:'Nunito',sans-serif;font-weight:800;font-size:.92rem;border:none;border-radius:50px;padding:10px 26px;cursor:pointer;transition:all .15s;position:relative;overflow:hidden;letter-spacing:.2px}
+.btn::before{content:'';position:absolute;top:0;left:0;right:0;height:46%;background:rgba(255,255,255,.1);border-radius:50px 50px 80px 80px;pointer-events:none}
+.btn:active{transform:scale(.95) translateY(1px)!important}
+.btn-blue{background:linear-gradient(175deg,#d03020 0%,#8b1010 100%);color:#ffd0c0;box-shadow:0 4px 0 #500808,0 6px 18px rgba(180,20,10,.35)}
+.btn-blue:hover{transform:translateY(-2px);box-shadow:0 6px 0 #500808,0 10px 24px rgba(200,30,10,.42)}
+.btn-green{background:linear-gradient(175deg,#b02818 0%,#701008 100%);color:#ffd0c0;box-shadow:0 4px 0 #400606,0 6px 18px rgba(150,15,8,.3)}
+.btn-green:hover{transform:translateY(-2px)}
+.btn-gray{background:linear-gradient(175deg,#2a0808 0%,#1a0404 100%);color:#c09080;border:1.5px solid rgba(180,40,20,.2);box-shadow:0 4px 0 #0e0202,0 5px 14px rgba(0,0,0,.3)}
+.btn-gray:hover{transform:translateY(-2px);background:linear-gradient(175deg,#380a0a,#240606)}
+.btn-sm{padding:7px 17px;font-size:.8rem}
+.btn-xs{padding:5px 12px;font-size:.74rem}
+
+/* Toast & particles */
+.toast{position:fixed;top:50%;left:50%;z-index:300;transform:translate(-50%,-50%) scale(0);font-weight:900;font-size:2rem;color:#ffd0c0;text-shadow:0 2px 14px rgba(200,30,10,.5);pointer-events:none;opacity:0;transition:transform .2s cubic-bezier(.34,1.56,.64,1),opacity .3s;white-space:nowrap}
+.toast.on{transform:translate(-50%,-50%) scale(1);opacity:1}
+.particle{position:fixed;pointer-events:none;border-radius:50%;z-index:200;animation:pfly .72s ease-out forwards}
+@keyframes pfly{0%{transform:translate(0,0) scale(1);opacity:1}100%{transform:translate(var(--dx),var(--dy)) scale(0);opacity:0}}
+
+/* Gauntlet info on title */
+.gauntlet-info{display:flex;flex-direction:column;align-items:center;gap:4px;margin-bottom:16px}
+.gi-row{display:flex;align-items:center;gap:12px;width:100%}
+.gi-phase{display:inline-flex;align-items:center;gap:5px;font-size:.76rem;font-weight:800;padding:5px 12px;border-radius:50px;letter-spacing:.3px;min-width:100px;justify-content:center;flex-shrink:0}
+.gi-desc{font-size:.76rem;font-weight:700;color:#806060}
+.gi-divider{font-size:.9rem;color:rgba(200,50,30,.35);font-weight:900;line-height:1}
+.gi-note{font-size:.74rem;font-weight:700;color:#604040;text-align:center;border-top:1px solid rgba(180,40,20,.15);padding-top:12px;line-height:1.5}
+</style>
+</head>
+<body>
+<div class="amb"><div class="amb-b ab1"></div><div class="amb-b ab2"></div><div class="amb-b ab3"></div></div>
+
+<!-- ═══════════ TITLE ═══════════ -->
+<div class="screen on" id="st">
+  <div class="t-logo">🃏 <span class="g">Atlas</span></div>
+  <div class="t-sub">Endless Roguelike Run</div>
+  <div class="panel diff-panel">
+    <h2>The Gauntlet</h2>
+    <div class="gauntlet-info">
+      <div class="gi-row"><span class="gi-phase pb-easy">🌱 Easy</span><span class="gi-desc">3 floors • 6 pairs • 60s</span></div>
+      <div class="gi-divider">↓</div>
+      <div class="gi-row"><span class="gi-phase pb-normal">⭐ Normal</span><span class="gi-desc">4 floors • 8 pairs • 30s</span></div>
+      <div class="gi-divider">↓</div>
+      <div class="gi-row"><span class="gi-phase pb-hard">🔥 Hard</span><span class="gi-desc">5 floors • 10 pairs • 15s</span></div>
+      <div class="gi-divider">↓</div>
+      <div class="gi-row"><span class="gi-phase pb-endless">♾️ Endless</span><span class="gi-desc">15s → −2s each floor. Survive.</span></div>
+    </div>
+    <p class="gi-note">One life. No restarts. Hit the score target before time runs out.</p>
+  </div>
+  <button class="btn btn-blue" onclick="beginRun()">▶ Enter the Gauntlet</button>
+</div>
+
+<!-- ═══════════ GAME ═══════════ -->
+<div class="screen" id="sg">
+  <!-- Timer -->
+  <div class="timer-strip">
+    <div class="t-top">
+      <div>
+        <div class="t-label">Time Left</div>
+        <div class="t-secs" id="tSecs">60</div>
+      </div>
+      <div style="text-align:right">
+        <div class="t-label" style="text-align:right">Floor</div>
+        <div class="t-floor-info" id="tFloorInfo">Easy • Floor 1/4</div>
+      </div>
+    </div>
+    <div class="t-bar-wrap"><div class="t-bar" id="tBar" style="width:100%"></div></div>
+  </div>
+  <!-- Score goal -->
+  <div class="score-strip" style="margin-top:8px">
+    <div class="sg-top">
+      <div>
+        <div class="t-label">Score This Floor</div>
+        <div class="sg-cur" id="sgCur">0</div>
+      </div>
+      <div style="text-align:right">
+        <div class="t-label" style="text-align:right">Target</div>
+        <div class="sg-target" id="sgTarget">/ 800</div>
+      </div>
+    </div>
+    <div class="sg-bar-wrap"><div class="sg-bar" id="sgBar" style="width:0%"></div></div>
+  </div>
+  <!-- HUD -->
+  <div class="hud" id="hud" style="margin-top:8px">
+    <div class="hud-p"><div><div class="hp-label">Total</div><div class="hp-val" id="hTotal">0</div></div></div>
+    <div class="hud-p"><div id="phaseBadge" class="phase-badge pb-easy">🌱 Easy</div></div>
+    <div class="hud-p"><div><div class="hp-label">Boards</div><div class="hp-val" id="hBoards">0</div></div></div>
+    <div class="hud-p"><div><div class="hp-label">Combo</div><div class="hp-val" id="hCombo">×1</div></div></div>
+  </div>
+  <!-- Active powers -->
+  <div class="powers-strip" id="pStrip"></div>
+  <!-- Grid panel -->
+  <div class="panel game-panel">
+    <div class="grid" id="grid"></div>
+    <div class="game-btns">
+      <button class="btn btn-gray btn-sm" id="btnHint" onclick="useHint()">🎯 Hint <span id="hintC">(0)</span></button>
+      <button class="btn btn-gray btn-sm" id="btnPeek" onclick="usePeek()">👁 Peek <span id="peekC">(0)</span></button>
+      <button class="btn btn-gray btn-xs" onclick="quitRun()">🚪 Quit</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ DRAFT ═══════════ -->
+<div class="screen" id="sd">
+  <div class="draft-top">
+    <span class="floor-badge" id="dBadge">Floor 1 Clear!</span>
+    <h1>⚡ Pick a Power-Up</h1>
+    <p>Carried into every future floor</p>
+  </div>
+  <div class="pup-grid" id="pupGrid"></div>
+  <button class="btn btn-gray btn-sm" style="margin-top:14px" onclick="skipPup()">Skip →</button>
+</div>
+
+<!-- ═══════════ END ═══════════ -->
+<div class="screen" id="se">
+  <div class="panel end-panel">
+    <span class="end-icon" id="eIcon">💀</span>
+    <div class="end-title" id="eTitle">Game Over</div>
+    <div class="end-sub" id="eSub">Better luck next run!</div>
+    <div class="end-stats" id="eStats"></div>
+    <div class="pows-end" id="ePows"></div>
+    <div style="margin-bottom:10px">
+      <div class="t-label" style="text-align:center;margin-bottom:6px">Floor History</div>
+      <div class="run-history" id="runHistory"></div>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+      <button class="btn btn-blue" onclick="backToTitle()">▶ New Run</button>
+      <button class="btn btn-gray" onclick="quickRetry()">↺ Run Again</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════
+//  CONFIG
+// ═══════════════════════════════════════════════
+const PHASES = [
+  { name:'Easy',   icon:'🌱', cls:'pb-easy',   floors:3, basePairs:6,  pairInc:0, timeStart:60, timeDec:0, baseTarget:2100,  targetInc:700   },
+  { name:'Normal', icon:'⭐', cls:'pb-normal', floors:4, basePairs:8,  pairInc:1, timeStart:30, timeDec:0, baseTarget:3500,  targetInc:1400  },
+  { name:'Hard',   icon:'🔥', cls:'pb-hard',   floors:5, basePairs:10, pairInc:1, timeStart:15, timeDec:0, baseTarget:5600,  targetInc:2100  },
+];
+// Endless: starts at 15s, drops 2s per floor, scales pairs and target
+function endlessCfg(ef) {
+  return {
+    name:'Endless', icon:'♾️', cls:'pb-endless',
+    pairs:  Math.min(16, 10 + Math.floor(ef / 2)),
+    time:   Math.max(5, 15 - (ef - 1) * 2),
+    target: 7700 + ef * 2800,
+    cols:   4,
+  };
+}
+
+const EMOJIS = ['🌸','🍀','🌟','🎈','🌈','🦋','🍭','🎵','🌺','🐠','🍄','🎪','🦄','🌙','🍦','🐸','🦊','🐬','🎆','🍇','🦁','🐧','🎠','🌻'];
+
+const ALL_PUPS = [
+  {id:'peek',    icon:'👁',  name:'Peek',        rar:'common', uses:2,  desc:'Reveal all cards 2s. Pauses timer.'},
+  {id:'hint',    icon:'🎯',  name:'Hint',         rar:'common', uses:3,  desc:'Highlight a matching pair.'},
+  {id:'timewarp',icon:'⏰',  name:'Time Warp',    rar:'common', desc:'+2s per combo match. Only triggers on active combo streaks.'},
+  {id:'echo',    icon:'🔄',  name:'Echo',         rar:'common',          desc:'Mismatched cards stay visible 1s longer.'},
+  {id:'stardust',icon:'✨',  name:'Stardust',     rar:'common',          desc:'+200 bonus added to floor score each board cleared.'},
+  {id:'lucky',   icon:'🍀',  name:'Lucky Clover', rar:'rare',            desc:'One pair auto-matched at each board start.'},
+  {id:'double',  icon:'💎',  name:'Double Down',  rar:'rare',            desc:'All match scores are doubled.'},
+  {id:'shield',  icon:'🛡',  name:'Shield',       rar:'rare',   uses:1,  desc:'Survive one failed floor — timer resets to 20s.'},
+  {id:'overcharge',icon:'⚡',name:'Overcharge',   rar:'rare',            desc:'Combo starts at ×2 on every new board.'},
+  {id:'refresh', icon:'💧',  name:'Refresh',      rar:'rare',            desc:'+4s added at combo ×3 or higher. Breaks reset this.'},
+  {id:'crystal', icon:'🔮',  name:'Crystal Ball', rar:'epic',   uses:1,  desc:'Instantly clears 3 random pairs.'},
+  {id:'magnet',  icon:'🧲',  name:'Magnet',       rar:'epic',            desc:'At 3+ combo: 15% chance per stack (max 5×) to glow a tile\'s match. Stacks reset on combo break.'},
+];
+
+// ═══════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════
+let run = {};
+let game = {};
+let timerInt = null;
+let peekPaused = false;
+
+function freshRun() {
+  return {
+    phase: 0,
+    floorInPhase: 1,
+    endlessFloor: 0,
+    globalFloor: 0,
+    totalScore: 0,
+    powers: {},
+    boardsCleared: 0,
+    maxCombo: 0,
+    totalMoves: 0,
+    floorHistory: [],
+  };
+}
+
+// ═══════════════════════════════════════════════
+//  TITLE
+// ═══════════════════════════════════════════════
+function beginRun() { run = freshRun(); startFloor(); }
+function backToTitle() { showScreen('st'); }
+function quickRetry() { run = freshRun(); startFloor(); }
+function quitRun() { endRun(); }
+
+function getFloorCfg() {
+  if (run.phase >= PHASES.length) {
+    const ec = endlessCfg(run.endlessFloor);
+    return { ...ec };
+  }
+  const p = PHASES[run.phase];
+  const fi = run.floorInPhase - 1;
+  const pairs = p.basePairs + (p.pairInc > 0 ? Math.floor(fi/2) : 0);
+  const time = Math.max(22, p.timeStart - fi * p.timeDec);
+  const target = p.baseTarget + fi * p.targetInc;
+  const cols = pairs <= 6 ? 3 : pairs <= 12 ? 4 : 5;
+  return { name: p.name, icon: p.icon, cls: p.cls, pairs, time, target, cols };
+}
+
+// ═══════════════════════════════════════════════
+//  FLOOR START
+// ═══════════════════════════════════════════════
+function startFloor() {
+  showScreen('sg');
+  clearInterval(timerInt);
+  run.globalFloor++;
+
+  const cfg = getFloorCfg();
+  game = {
+    floorScore: 0,
+    combo: 0,
+    moves: 0,
+    boardsCleared: 0,
+    cards: [],
+    flipped: [],
+    matched: [],
+    lock: false,
+    timeLeft: cfg.time,
+    maxTime: cfg.time,
+    target: cfg.target,
+    cols: cfg.cols || 4,
+    pairs: cfg.pairs,
+    magnetStacks: 0,   // 0–5, each stack = +15% chance to reveal after 3+ combo
+    targetReached: false,
+    cfg,
+  };
+
+  // Overcharge: combo starts at 2
+  if (run.powers['overcharge']) game.combo = 1;
+
+  buildBoard();
+  renderFloorHUD();
+  renderPowers();
+  updateScoreBar();
+  updateTimerUI();
+
+  // Lucky: auto-match 1 pair after short delay
+  if (run.powers['lucky']) setTimeout(autoMatchOne, 500);
+
+  timerInt = setInterval(tick, 1000);
+}
+
+function buildBoard() {
+  const pool = [...EMOJIS].sort(() => Math.random()-.5).slice(0, game.pairs);
+  game.cards = [...pool,...pool].sort(() => Math.random()-.5).map((e,i) => ({id:i,emoji:e,flipped:false,matched:false}));
+  game.flipped = [];
+  game.matched = [];
+  if (run.powers['overcharge']) game.combo = Math.max(game.combo, 1);
+  renderGrid();
+}
+
+// ═══════════════════════════════════════════════
+//  TIMER
+// ═══════════════════════════════════════════════
+function tick() {
+  if (peekPaused) return;
+  game.timeLeft = Math.max(0, game.timeLeft - 1);
+  updateTimerUI();
+  if (game.timeLeft <= 0) {
+    clearInterval(timerInt);
+    setTimeout(floorEnd, 200);
+  }
+}
+
+function updateTimerUI() {
+  const s = game.timeLeft;
+  const el = document.getElementById('tSecs');
+  el.textContent = s;
+  el.className = 't-secs' + (s <= 10 ? ' warn' : '');
+  const pct = (s / game.maxTime) * 100;
+  const bar = document.getElementById('tBar');
+  bar.style.width = pct + '%';
+  bar.className = 't-bar' + (pct < 28 ? ' warn' : '');
+}
+
+// ═══════════════════════════════════════════════
+//  HUD
+// ═══════════════════════════════════════════════
+function renderFloorHUD() {
+  const cfg = game.cfg;
+  const isEndless = run.phase >= PHASES.length;
+  const floorStr = isEndless
+    ? `Endless Floor ${run.endlessFloor}`
+    : `${cfg.name} • Floor ${run.floorInPhase}/${PHASES[run.phase].floors}`;
+  document.getElementById('tFloorInfo').textContent = floorStr;
+
+  const pb = document.getElementById('phaseBadge');
+  pb.className = 'phase-badge ' + cfg.cls;
+  pb.innerHTML = `${cfg.icon} ${cfg.name}`;
+
+  document.getElementById('hTotal').textContent = run.totalScore.toLocaleString();
+  document.getElementById('hBoards').textContent = run.boardsCleared;
+  document.getElementById('hCombo').textContent = `×${game.combo+1}`;
+  updateScoreBar();
+  updatePowerBtns();
+}
+
+function updateScoreBar() {
+  const cur = game.floorScore;
+  const tgt = game.target;
+  const pct = Math.min(100, (cur/tgt)*100);
+  const curEl = document.getElementById('sgCur');
+  curEl.textContent = cur.toLocaleString();
+  curEl.className = 'sg-cur' + (cur >= tgt ? ' hit' : '');
+  document.getElementById('sgTarget').textContent = `/ ${tgt.toLocaleString()}`;
+  const bar = document.getElementById('sgBar');
+  bar.style.width = pct + '%';
+  bar.className = 'sg-bar' + (cur >= tgt ? ' hit' : '');
+
+  // Target reached — end floor immediately
+  if (cur >= tgt && !game.targetReached) {
+    game.targetReached = true;
+    clearInterval(timerInt);
+    setTimeout(floorEnd, 400);
+  }
+}
+
+function renderPowers() {
+  const ps = document.getElementById('pStrip');
+  ps.innerHTML = '';
+  for (const [id, data] of Object.entries(run.powers)) {
+    const p = ALL_PUPS.find(x=>x.id===id);
+    if (!p) continue;
+    const b = document.createElement('div');
+    b.className = 'pw-badge';
+    const useTxt = data.uses !== undefined ? ` <span style="color:var(--mid)">(${data.uses})</span>` : '';
+    const cntTxt = data.count > 1 ? ` ×${data.count}` : '';
+    b.innerHTML = `${p.icon} ${p.name}${cntTxt}${useTxt}`;
+    ps.appendChild(b);
+  }
+}
+
+function updatePowerBtns() {
+  const ph = run.powers['hint'], pp = run.powers['peek'];
+  const hu = ph ? ph.uses : 0, pu = pp ? pp.uses : 0;
+  document.getElementById('hintC').textContent = `(${hu})`;
+  document.getElementById('peekC').textContent = `(${pu})`;
+  document.getElementById('btnHint').style.opacity = hu ? 1 : .4;
+  document.getElementById('btnPeek').style.opacity = pu ? 1 : .4;
+}
+
+// ═══════════════════════════════════════════════
+//  GRID
+// ═══════════════════════════════════════════════
+function renderGrid() {
+  const g = document.getElementById('grid');
+  const cols = game.cols;
+  g.style.gridTemplateColumns = `repeat(${cols},1fr)`;
+  g.innerHTML = '';
+  game.cards.forEach((c,i) => {
+    const el = document.createElement('div');
+    el.className = 'card'+(c.flipped?' flipped':'')+(c.matched?' matched':'');
+    el.innerHTML = `<div class="card-inner"><div class="card-face card-back"></div><div class="card-face card-front">${c.emoji}</div></div>`;
+    el.addEventListener('click', ()=>onCard(i));
+    g.appendChild(el);
+  });
+}
+
+function updateCard(i) {
+  const els = document.querySelectorAll('.card');
+  if (!els[i]) return;
+  const c = game.cards[i];
+  els[i].className = 'card'+(c.flipped?' flipped':'')+(c.matched?' matched':'');
+}
+
+// ═══════════════════════════════════════════════
+//  CARD LOGIC
+// ═══════════════════════════════════════════════
+function onCard(i) {
+  if (game.lock || peekPaused) return;
+  const c = game.cards[i];
+  if (c.matched || c.flipped) return;
+  if (game.flipped.length >= 2) return;
+
+  c.flipped = true;
+  game.flipped.push(i);
+  updateCard(i);
+
+  // Magnet: only fires at combo >= 3, chance = stacks × 15% (max 75%)
+  if (run.powers['magnet'] && game.combo >= 3 && game.magnetStacks > 0 && game.flipped.length === 1) {
+    const chance = Math.min(game.magnetStacks, 5) * 0.15;
+    if (Math.random() < chance) {
+      const partner = game.cards.findIndex((cc,ii) => ii !== i && cc.emoji === c.emoji && !cc.matched);
+      if (partner >= 0) {
+        const els = document.querySelectorAll('.card');
+        els[partner]?.classList.add('hint');
+        setTimeout(()=>els[partner]?.classList.remove('hint'), 900);
+      }
+    }
+  }
+
+  if (game.flipped.length === 2) {
+    game.moves++;
+    run.totalMoves++;
+    game.lock = true;
+    const delay = 480 + (run.powers['echo'] ? 700 : 0);
+    setTimeout(checkMatch, delay);
+  }
+}
+
+function checkMatch() {
+  const [a,b] = game.flipped;
+  if (game.cards[a].emoji === game.cards[b].emoji) {
+    game.cards[a].matched = true;
+    game.cards[b].matched = true;
+    game.matched.push(a,b);
+    game.combo++;
+    if (game.combo > run.maxCombo) run.maxCombo = game.combo;
+
+    let pts = 100 * game.combo;
+    if (run.powers['double']) pts *= 2;
+    game.floorScore += pts;
+
+    // Time Warp: +2s per stack on any active combo (combo >= 1)
+    if (run.powers['timewarp'] && game.combo >= 1 && game.maxTime > 0) {
+      const tw = run.powers['timewarp'].count || 1;
+      game.timeLeft = Math.min(game.maxTime, game.timeLeft + (2 * tw));
+      updateTimerUI();
+    }
+
+    // Refresh: +4s per stack but only at combo ×3 or higher
+    if (run.powers['refresh'] && game.combo >= 3 && game.maxTime > 0) {
+      const rf = run.powers['refresh'].count || 1;
+      game.timeLeft = Math.min(game.maxTime, game.timeLeft + (4 * rf));
+      updateTimerUI();
+    }
+
+    spawnParticles(a); spawnParticles(b);
+    if (game.combo >= 2) showToast(
+      game.combo>=6?`🌟 ×${game.combo} GODLIKE!`:
+      game.combo>=5?`⚡ ×${game.combo} Blazing!`:
+      game.combo>=4?`💫 ×${game.combo} Scorching!`:
+      game.combo>=3?`🔥 ×${game.combo} Hot!`:
+      `✨ Combo ×${game.combo}!`, '#f0c430');
+
+    updateCard(a); updateCard(b);
+    document.getElementById('hCombo').textContent = `×${game.combo+1}`;
+    updateScoreBar();
+    document.getElementById('hTotal').textContent = (run.totalScore + game.floorScore).toLocaleString();
+
+    // Magnet: build stacks on combo >= 3, cap at 5
+    if (run.powers['magnet'] && game.combo >= 3) {
+      game.magnetStacks = Math.min(5, game.magnetStacks + 1);
+    }
+
+    game.flipped = [];
+    game.lock = false;
+
+    if (game.matched.length === game.cards.length) {
+      setTimeout(onBoardClear, 300);
+    }
+  } else {
+    game.combo = run.powers['overcharge'] ? 1 : 0;
+    game.magnetStacks = 0;  // stacks reset on combo break
+    document.getElementById('hCombo').textContent = `×${game.combo+1}`;
+    setTimeout(()=>{
+      game.cards[a].flipped = false;
+      game.cards[b].flipped = false;
+      updateCard(a); updateCard(b);
+      game.flipped = [];
+      game.lock = false;
+    }, 260);
+  }
+}
+
+// ═══════════════════════════════════════════════
+//  BOARD CLEAR (timer keeps running)
+// ═══════════════════════════════════════════════
+function onBoardClear() {
+  game.lock = true;
+  game.boardsCleared++;
+  run.boardsCleared++;
+  document.getElementById('hBoards').textContent = run.boardsCleared;
+
+  // Board clear bonus
+  let bonus = 250;
+  if (run.powers['stardust']) bonus += 200 * run.powers['stardust'].count;
+  if (run.powers['double']) bonus *= 2;
+  game.floorScore += bonus;
+  updateScoreBar();
+  document.getElementById('hTotal').textContent = (run.totalScore + game.floorScore).toLocaleString();
+  showToast(`🎊 Board Clear! +${bonus}`, '#32b85e');
+
+  // Flash
+  const f = document.createElement('div');
+  f.className = 'bc-flash';
+  document.body.appendChild(f);
+  setTimeout(()=>f.remove(), 500);
+
+  // Clear animation then rebuild
+  const els = document.querySelectorAll('.card');
+  game.cards.forEach((_,i) => els[i]?.classList.add('clearing'));
+
+  setTimeout(()=>{
+    buildBoard();
+    if (run.powers['lucky']) autoMatchOne();
+    game.lock = false;
+  }, 380);
+}
+
+// ═══════════════════════════════════════════════
+//  POWER USES
+// ═══════════════════════════════════════════════
+function useHint() {
+  const ph = run.powers['hint'];
+  if (!ph || ph.uses <= 0) return;
+  ph.uses--;
+  renderPowers(); updatePowerBtns();
+  const target = game.cards.find(c=>!c.matched)?.emoji;
+  if (!target) return;
+  const pair = game.cards.reduce((a,c,i)=>c.emoji===target&&!c.matched?[...a,i]:a,[]);
+  const els = document.querySelectorAll('.card');
+  pair.forEach(i=>{els[i]?.classList.add('hint')});
+  setTimeout(()=>pair.forEach(i=>els[i]?.classList.remove('hint')), 1800);
+}
+
+function usePeek() {
+  const pp = run.powers['peek'];
+  if (!pp || pp.uses <= 0) return;
+  pp.uses--;
+  renderPowers(); updatePowerBtns();
+  peekPaused = true;
+  game.lock = true;
+  const els = document.querySelectorAll('.card');
+  game.cards.forEach((c,i)=>{ if(!c.matched) els[i]?.classList.add('flipped'); });
+  setTimeout(()=>{
+    game.cards.forEach((c,i)=>{ if(!c.matched&&!c.flipped) els[i]?.classList.remove('flipped'); });
+    peekPaused = false;
+    game.lock = false;
+  }, 2200);
+}
+
+function autoMatchOne() {
+  const emojis = [...new Set(game.cards.filter(c=>!c.matched).map(c=>c.emoji))];
+  if (!emojis.length) return;
+  const e = emojis[Math.floor(Math.random()*emojis.length)];
+  const pair = game.cards.reduce((a,c,i)=>c.emoji===e&&!c.matched?[...a,i]:a,[]);
+  if (pair.length < 2) return;
+  pair.forEach(i=>{game.cards[i].flipped=true;game.cards[i].matched=true;game.matched.push(i);});
+  renderGrid();
+  pair.forEach(i=>spawnParticles(i));
+  let pts = 100; if (run.powers['double']) pts *= 2;
+  game.floorScore += pts;
+  updateScoreBar();
+  showToast('🍀 Lucky!', '#32b85e');
+}
+
+function useCrystalBall() {
+  for (let j=0;j<3;j++){
+    const emojis=[...new Set(game.cards.filter(c=>!c.matched).map(c=>c.emoji))];
+    if(!emojis.length) break;
+    const e=emojis[Math.floor(Math.random()*emojis.length)];
+    const pair=game.cards.reduce((a,c,i)=>c.emoji===e&&!c.matched?[...a,i]:a,[]);
+    if(pair.length<2) continue;
+    pair.forEach(i=>{game.cards[i].flipped=true;game.cards[i].matched=true;game.matched.push(i);});
+    pair.forEach(i=>spawnParticles(i));
+    game.floorScore += run.powers['double'] ? 200 : 100;
+  }
+  renderGrid(); updateScoreBar();
+  if (game.matched.length===game.cards.length) setTimeout(onBoardClear, 300);
+}
+
+// ═══════════════════════════════════════════════
+//  FLOOR END
+// ═══════════════════════════════════════════════
+function floorEnd() {
+  const cleared = game.floorScore >= game.target;
+
+  // Shield: survive once
+  if (!cleared && run.powers['shield'] && run.powers['shield'].uses > 0) {
+    run.powers['shield'].uses--;
+    game.timeLeft = 20;
+    game.maxTime = 20;
+    renderPowers();
+    showToast('🛡 Shield saved you!', '#32b85e');
+    updateTimerUI();
+    timerInt = setInterval(tick, 1000);
+    return;
+  }
+
+  if (!cleared) { endRun(); return; }
+
+  // Record floor
+  run.floorHistory.push({
+    floor: run.globalFloor,
+    phase: game.cfg.name,
+    score: game.floorScore,
+    target: game.target,
+    boards: game.boardsCleared,
+    cleared: true,
+  });
+  run.totalScore += game.floorScore;
+
+  showFloorClearModal();
+}
+
+function showFloorClearModal() {
+  const bg = document.createElement('div');
+  bg.className = 'modal-bg';
+  const isEndless = run.phase >= PHASES.length;
+  const phaseFloors = isEndless ? '∞' : PHASES[run.phase].floors;
+  const timeBonus = Math.floor(game.timeLeft * 3);
+
+  bg.innerHTML = `
+    <div class="modal-box">
+      <span class="modal-icon">🎉</span>
+      <div class="modal-title">Floor Clear!</div>
+      <div class="modal-sub">${game.cfg.name} Floor ${isEndless?run.endlessFloor:run.floorInPhase} / ${phaseFloors}<br>Time bonus: +${timeBonus.toLocaleString()} pts</div>
+      <div class="modal-stats">
+        <div class="ms"><div class="ms-v">${game.floorScore.toLocaleString()}</div><div class="ms-l">Floor Score</div></div>
+        <div class="ms"><div class="ms-v">${game.boardsCleared}</div><div class="ms-l">Boards</div></div>
+        <div class="ms"><div class="ms-v">×${run.maxCombo}</div><div class="ms-l">Best Combo</div></div>
+        <div class="ms"><div class="ms-v">${game.timeLeft}s</div><div class="ms-l">Time Left</div></div>
+      </div>
+      <button class="btn btn-blue" id="modalContinue">⚡ Choose Power-Up</button>
+    </div>`;
+  document.body.appendChild(bg);
+  run.totalScore += timeBonus;
+
+  document.getElementById('modalContinue').addEventListener('click', ()=>{
+    bg.remove();
+    showDraft();
+  });
+}
+
+// ═══════════════════════════════════════════════
+//  DRAFT
+// ═══════════════════════════════════════════════
+function showDraft() {
+  showScreen('sd');
+  const isEndless = run.phase >= PHASES.length;
+  const floorLabel = isEndless ? `Endless Floor ${run.endlessFloor} Clear!` : `${game.cfg.name} Floor ${run.floorInPhase} Clear!`;
+  document.getElementById('dBadge').textContent = floorLabel;
+
+  // Pick 3: at least 1 rare/epic
+  const rare = [...ALL_PUPS].filter(p=>p.rar!=='common').sort(()=>Math.random()-.5);
+  const common = [...ALL_PUPS].filter(p=>p.rar==='common').sort(()=>Math.random()-.5);
+  const offered = [rare[0], common[0], common[1]].filter(Boolean).sort(()=>Math.random()-.5);
+
+  const pg = document.getElementById('pupGrid');
+  pg.innerHTML = '';
+  offered.forEach(p=>{
+    const el = document.createElement('div');
+    el.className = 'pup';
+    el.innerHTML = `
+      <div class="pup-icon">${p.icon}</div>
+      <div class="pup-name">${p.name}</div>
+      <div class="pup-desc">${p.desc}</div>
+      <span class="pup-rar rar-${p.rar[0]}">${p.rar}</span>`;
+    el.addEventListener('click', ()=>choosePup(p));
+    pg.appendChild(el);
+  });
+}
+
+function choosePup(p) {
+  if (!run.powers[p.id]) run.powers[p.id] = {count:1, uses:p.uses};
+  else {
+    run.powers[p.id].count++;
+    if (p.uses) run.powers[p.id].uses = (run.powers[p.id].uses||0) + p.uses;
+  }
+  advanceFloor();
+}
+
+function skipPup() { advanceFloor(); }
+
+function advanceFloor() {
+  const isEndless = run.phase >= PHASES.length;
+
+  if (isEndless) {
+    run.endlessFloor++;
+    startFloor();
+    return;
+  }
+
+  const p = PHASES[run.phase];
+  if (run.floorInPhase >= p.floors) {
+    // Phase complete → next phase
+    const nextPhase = run.phase + 1;
+    if (nextPhase >= PHASES.length) {
+      // Entering Endless
+      run.phase = 3;
+      run.endlessFloor = 1;
+      showPhaseUp('♾️', 'ENDLESS MODE', 'No more floors. Survive as long as you can.', ()=>startFloor());
+    } else {
+      run.phase = nextPhase;
+      run.floorInPhase = 1;
+      const np = PHASES[nextPhase];
+      showPhaseUp(np.icon, np.name+' Mode', `${np.floors} floors • ${np.basePairs} pairs • ${np.timeStart}s`, ()=>startFloor());
+    }
+  } else {
+    run.floorInPhase++;
+    startFloor();
+  }
+}
+
+function showPhaseUp(icon, title, sub, cb) {
+  const el = document.createElement('div');
+  el.className = 'phaseup';
+  el.innerHTML = `<div class="phaseup-box">
+    <span class="phaseup-icon">${icon}</span>
+    <div class="phaseup-title">${title}</div>
+    <div class="phaseup-sub">${sub}</div>
+  </div>`;
+  document.body.appendChild(el);
+  setTimeout(()=>{ el.remove(); cb(); }, 2600);
+}
+
+// ═══════════════════════════════════════════════
+//  END RUN
+// ═══════════════════════════════════════════════
+function endRun() {
+  clearInterval(timerInt);
+
+  // Record failed floor
+  run.floorHistory.push({
+    floor: run.globalFloor,
+    phase: game.cfg?.name || '?',
+    score: game.floorScore || 0,
+    target: game.target || 0,
+    boards: game.boardsCleared || 0,
+    cleared: false,
+  });
+
+  showScreen('se');
+  const isEndless = run.phase >= PHASES.length;
+  const phaseReached = isEndless ? `Endless Floor ${run.endlessFloor}` : `${PHASES[Math.min(run.phase,2)].name} Floor ${run.floorInPhase}`;
+
+  document.getElementById('eIcon').textContent = run.globalFloor > 8 ? '🏆' : run.globalFloor > 4 ? '💫' : '💀';
+  document.getElementById('eTitle').textContent = run.globalFloor > 1 ? 'Run Over' : 'Game Over';
+  document.getElementById('eSub').textContent = `Reached: ${phaseReached}`;
+
+  const stats = document.getElementById('eStats');
+  stats.innerHTML = `
+    <div class="ms"><div class="ms-v">${run.totalScore.toLocaleString()}</div><div class="ms-l">Total Score</div></div>
+    <div class="ms"><div class="ms-v">${run.globalFloor}</div><div class="ms-l">Floors</div></div>
+    <div class="ms"><div class="ms-v">${run.boardsCleared}</div><div class="ms-l">Boards</div></div>
+    <div class="ms"><div class="ms-v">×${run.maxCombo}</div><div class="ms-l">Best Combo</div></div>`;
+
+  const pows = Object.keys(run.powers);
+  const ep = document.getElementById('ePows');
+  if (pows.length) {
+    ep.innerHTML = `<h3>Power-Ups Collected</h3><div class="pows-list">${pows.map(id=>{
+      const p=ALL_PUPS.find(x=>x.id===id); return p?`<div class="pw-badge">${p.icon} ${p.name}</div>`:'';
+    }).join('')}</div>`;
+  } else ep.innerHTML = '';
+
+  const rh = document.getElementById('runHistory');
+  rh.innerHTML = run.floorHistory.map(f=>`
+    <div class="rh-row">
+      <span class="rh-floor">${f.phase} F${f.floor}</span>
+      <span class="rh-score">${f.score.toLocaleString()} / ${f.target.toLocaleString()}</span>
+      <span class="rh-result ${f.cleared?'ok':'fail'}">${f.cleared?'✓ Clear':'✗ Fail'}</span>
+    </div>`).join('');
+}
+
+// ═══════════════════════════════════════════════
+//  FX
+// ═══════════════════════════════════════════════
+let toastTimer = null;
+function showToast(msg, color) {
+  const t = document.getElementById('toast');
+  clearTimeout(toastTimer);
+  t.textContent = msg;
+  t.style.color = color || '#fff';
+  t.classList.add('on');
+  toastTimer = setTimeout(()=>t.classList.remove('on'), 1000);
+}
+
+function spawnParticles(cardIdx) {
+  const els = document.querySelectorAll('.card');
+  const el = els[cardIdx];
+  if (!el) return;
+  const r = el.getBoundingClientRect();
+  const cx = r.left+r.width/2, cy = r.top+r.height/2;
+  const cols = ['#cc2010','#ff4030','#ff8050','#e05030','#ff6040','#ffd0c0'];
+  for (let i=0;i<9;i++){
+    const p=document.createElement('div');
+    p.className='particle';
+    const sz=5+Math.random()*8, a=Math.random()*Math.PI*2, d=36+Math.random()*58;
+    p.style.cssText=`width:${sz}px;height:${sz}px;left:${cx}px;top:${cy}px;background:${cols[Math.floor(Math.random()*cols.length)]};--dx:${Math.cos(a)*d}px;--dy:${Math.sin(a)*d}px`;
+    document.body.appendChild(p);
+    setTimeout(()=>p.remove(),740);
+  }
+}
+
+// ═══════════════════════════════════════════════
+//  SCREEN UTIL
+// ═══════════════════════════════════════════════
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));
+  document.getElementById(id).classList.add('on');
+}
+</script>
+</body>
+</html>
